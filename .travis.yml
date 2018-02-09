@@ -11,7 +11,7 @@ env:
 install:
 - pip install -r requirements-build.txt
 script:
-- nb test
+- exrb test
 jobs:
   include:
   - stage: deploy
