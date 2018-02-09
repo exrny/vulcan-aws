@@ -1,0 +1,19 @@
+language: python
+python:
+- '2.7'
+- '3.4'
+- '3.5'
+- '3.6'
+env:
+  global:
+  - secure: THPIqUC9vQCyUaMkPZVT8AfWdyfsk/9U3Pxn1gr4rs8MyTgig1rC993qfVDjaeieAmRC+zoBlnWDO1m2rL0g6F9lvzk71azIi9JaPyzV4vrMm6MG+qpZ/0QKQON4KbOgBu5c23NwIiv9ZYropFjn1CnyLm/vhgQyiP8WzhT84zOJQADYS5RCB5TChlAv0KpYTKwz7dtexFghJJ61NnMQGzAwxr4sTgHGQ6YvwcYT35VZFSOeQIP4VHSQRL3Kmjrr0nTsq+wYrHrrxwd0qWEB6QtmN5UKRZy/GdBmJp/0coKwKwo1YNyFxCXfhtyxWka9WarxPA0eMltFHBcyva7wMI6uMuo3hr0ZoqGso5KSjAEqn2LaX6Om6BMPnIQP4h/Q0gdhue9OuN3yLW0me+EM3P9qJdjci7um2U4WLOkNquiVQuQvGhX+nuCD8NQzy9qfHRKL0WnPu/k/uZCav8Kc85yU5n+53gR8Ho1CITrg1p+NFslQTVX2YplFkWqNRV74NlfNqYWq7jcCPrVBzL93c6YKPVKt1gGzYOqyXvGjZRf/tY5FYpEBexUUYeiMZPmHvDZbnxgQYMo5/yjL9N+lEnGwQW2v4Ma3SiH2xIKJllncyKrkjavZE/OVDNm1HquLdgAZDSCGT8BYME2hiC8S8xyHpyZv4lzxwd22DPu03T8=
+  - secure: jSRt7QWKrhpcX+az1snCwpJC9fxQMzNHw4bnBKE+gi6cRVnChVEyQuo+IOySdPoHcZKvXu71X7sU07tK8QjXO3XAyN/rOP43i/H0j5WVGA7gFGi2SZE4TGSN4H0EyjoAfguaERZg8AhEUVDtWuX1X6sRA+Dae1pCtJldGC4LFthjXqBt1h1BmqkNn4v4R4POVj8Hp3veUK/Q/AR7Jy/W2oPCqLXrQM0bKj0Dva5mvSYgLX02g6f3S1GY/3ium/XkhXfcNNBS9VZIl0FqPscVGq6XSj4k2WJ1mILJY+P5UtZlN7m7FTjvt4ZxgOqoodMbcQQ8y/HX6D4NNUjqI2SwiffLJdveMUkbCX7v7ObG0KL54lsFyxK9CtuTpXRsCtI39lXz5jG7XIKFjY4qO7HaT5YeIOYLhq6QlzJYAKThRjISXYtSZdSvQ5OFVDnz/bjcZaFL1fp4pKHcoEF1xnlTFiH7Lj22gjaW+XMx3YzSWraWAaUmPtoNbwyjYQzWwPMNZoHa4/9+QYbjYaT/PeX+/MAlcym6FaehHn35BLF8Y4yU5ZDbGoxUg7zqHYCDw90AMFwZixj9zDwwstu/wW0cCz2ml/h0+IQt9/WmhS53vhTz9Wwd8OvryX4/dgU9gAl6DwzyQQcixyI92U5rpmabl9NIQxJ1JeSJll9yZhhf16s=
+install:
+- pip install -r requirements-build.txt
+script:
+- nb test
+jobs:
+  include:
+  - stage: deploy
+    python: 3.6
+    script: nb pypi

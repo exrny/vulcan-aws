@@ -1,0 +1,5 @@
+pytest
+pep8
+twine
+exr-builder
+sh
