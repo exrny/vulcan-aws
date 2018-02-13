@@ -1,19 +1,23 @@
 language: python
 python:
-- '2.7'
-- '3.4'
-- '3.5'
-- '3.6'
+  - '2.7'
+  - '3.4'
+  - '3.5'
+  - '3.6'
+
 env:
   global:
-  - secure: THPIqUC9vQCyUaMkPZVT8AfWdyfsk/9U3Pxn1gr4rs8MyTgig1rC993qfVDjaeieAmRC+zoBlnWDO1m2rL0g6F9lvzk71azIi9JaPyzV4vrMm6MG+qpZ/0QKQON4KbOgBu5c23NwIiv9ZYropFjn1CnyLm/vhgQyiP8WzhT84zOJQADYS5RCB5TChlAv0KpYTKwz7dtexFghJJ61NnMQGzAwxr4sTgHGQ6YvwcYT35VZFSOeQIP4VHSQRL3Kmjrr0nTsq+wYrHrrxwd0qWEB6QtmN5UKRZy/GdBmJp/0coKwKwo1YNyFxCXfhtyxWka9WarxPA0eMltFHBcyva7wMI6uMuo3hr0ZoqGso5KSjAEqn2LaX6Om6BMPnIQP4h/Q0gdhue9OuN3yLW0me+EM3P9qJdjci7um2U4WLOkNquiVQuQvGhX+nuCD8NQzy9qfHRKL0WnPu/k/uZCav8Kc85yU5n+53gR8Ho1CITrg1p+NFslQTVX2YplFkWqNRV74NlfNqYWq7jcCPrVBzL93c6YKPVKt1gGzYOqyXvGjZRf/tY5FYpEBexUUYeiMZPmHvDZbnxgQYMo5/yjL9N+lEnGwQW2v4Ma3SiH2xIKJllncyKrkjavZE/OVDNm1HquLdgAZDSCGT8BYME2hiC8S8xyHpyZv4lzxwd22DPu03T8=
-  - secure: jSRt7QWKrhpcX+az1snCwpJC9fxQMzNHw4bnBKE+gi6cRVnChVEyQuo+IOySdPoHcZKvXu71X7sU07tK8QjXO3XAyN/rOP43i/H0j5WVGA7gFGi2SZE4TGSN4H0EyjoAfguaERZg8AhEUVDtWuX1X6sRA+Dae1pCtJldGC4LFthjXqBt1h1BmqkNn4v4R4POVj8Hp3veUK/Q/AR7Jy/W2oPCqLXrQM0bKj0Dva5mvSYgLX02g6f3S1GY/3ium/XkhXfcNNBS9VZIl0FqPscVGq6XSj4k2WJ1mILJY+P5UtZlN7m7FTjvt4ZxgOqoodMbcQQ8y/HX6D4NNUjqI2SwiffLJdveMUkbCX7v7ObG0KL54lsFyxK9CtuTpXRsCtI39lXz5jG7XIKFjY4qO7HaT5YeIOYLhq6QlzJYAKThRjISXYtSZdSvQ5OFVDnz/bjcZaFL1fp4pKHcoEF1xnlTFiH7Lj22gjaW+XMx3YzSWraWAaUmPtoNbwyjYQzWwPMNZoHa4/9+QYbjYaT/PeX+/MAlcym6FaehHn35BLF8Y4yU5ZDbGoxUg7zqHYCDw90AMFwZixj9zDwwstu/wW0cCz2ml/h0+IQt9/WmhS53vhTz9Wwd8OvryX4/dgU9gAl6DwzyQQcixyI92U5rpmabl9NIQxJ1JeSJll9yZhhf16s=
+    - secure: bwPk4owQFVG46KnupQn3rMCYLuuMykDezFznXVOe0LNOwiOr7TRFy0w6aLQhl8AsqR7AMKDG8xk8108qYPuocwTiIhKrYZD4cOMBKKfZnp3shkfbgRg+tAgM0Nsr30wOp5m+jvA1YAD4SdWt+NX/UIpl41+v6T4NU7p8TNeNoQwfLMqRHiFp3e1UenLXxx3bJGX3gmQaUlkQa8GYGNkUkEIIzHDqdpxGHLqQ9FKEPEmf8bdydGPKZfXHF8DTQyKAD9cpWqELZ2Nh4LCvjNfMZiNGxUJ3RFhvKkd+ZI9yICoWdJBosn13T3aad+iJjmZ/q3rsJF1eQBnzuWrvYnMUB2Xvp++7pcy3ZDaWWwG0nBXXhZdtZ5jffoCibT6kQOJyotzLRhPA/6UdqUGtqSXWmRw0+cgpHsQMD3iiRw4OHkHinoFyGB1PQcm6+XG5wXSjCbGGN1g/kIVzI2ZipyR6n9GIlSv7SJT8XX4PszVwPavw5AMCzBQByDRknXi3IuPm5lIWub5y+CepOWFo2HCmBxueDbI6LL4yC5h4DJm2YX0tyiT4OisnEEKFt3a/awTube50g5Wa52JMq3N+QtDqpRpS2iWuBmeL5to1AYoALOWmafptB2Ho/FgzbTNOBieTtS6xvHdaGuiUQiddbSbApOmMPegdljYGi6N94cGoqrs=
+    - secure: XHfEFXDghpt1C3ltNgbfYHSPKlJBxdRTXcsAAKDnx/9uuLgykbzTxlI/JlX28UkZ4jOvKpEb5+BkCmidmANp8WzqrZFyQsLA6lAvbJQyRmBAodUmvPO+i452e8VdRNoF5i/KzZRwOvGaYQMepfizhGAa9GXO8mm3vlBGw8/10AIgAsViPlz7nZ0WSiA30vlM5RYC1KVf0M604zK+WiSlLgHzxx8zvG7LI16sxI/CB60YzNUKCu7PFk1bOIb3pGDXd2nhbZT2p1AydyTYISxCaMpCzkCsCuPz/1iOxWCgh1s/W4F+8N+u/DKcop5Epfqn4R9GIszscIMzgpav/CcXyo2Z9jcden3Ziobq8byBwMGQCLWsnii4R7VATQMuvS+5Dhul/JXvSn/jQJD+OuU6gNhWTSOx5ts+6qA/okf8yNUg6gUNY8K0VIXTmodEQrHlVnQ2Yy9a6BJBODnz7M1wodx3fwQ5yuA2mnKC8SQOlFKjwmE7y+e16H32PQoJCv0WZtw2FmCijdFdQk2rIpXRhuAiEKW2RCnjTtS8srotMz2XVWaS7M0K6Bmd24mspQq++pSHanY5zy6103QpTB7MoCAWRUXe/DVlEr5kY7Jv9kkVOIGJKk6iom+P1OAC8N4Rn8UaL664iwun7ZgZHk+AUIicacvrynnmkWnh1EuDQok=
+
 install:
-- pip install -r requirements-build.txt
+  - pip install -r requirements-build.txt
+
 script:
-- exrb test
+  - exrb test
+
 jobs:
   include:
-  - stage: deploy
-    python: 3.6
-    script: exrb pypi
+    - stage: deploy
+      python: 3.6
+      script: exrb pypi
