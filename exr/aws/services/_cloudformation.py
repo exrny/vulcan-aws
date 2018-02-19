@@ -6,9 +6,9 @@ import json
 import sys
 import time
 from boto3.s3.transfer import S3Transfer
-from navio.aws.services._session import AWSSession
-from navio.aws import shared
-from navio.aws._common import dump
+from exr.aws.services._session import AWSSession
+from exr.aws import shared
+from exr.aws._common import dump
 
 try:
     from urlparse import urlparse
