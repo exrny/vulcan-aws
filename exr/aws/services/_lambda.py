@@ -84,7 +84,10 @@ class AWSLambda(AWSSession):
         shutil.copytree('src/main/python/', 'target/distrib/',
                         ignore=shutil.ignore_patterns('*.pyc', 'tmp*'))
 
-        self.install_deps(['--target', 'target/distrib/'], docker_image = kwargs.get('docker_image', None))
+        self.install_deps(
+            ['--target', 'target/distrib/'],
+            docker_image=kwargs.get('docker_image', None)
+        )
 
         zipf = zipfile.ZipFile(
             'target/{}'.format(self.s3_filename), 'w', zipfile.ZIP_DEFLATED)
@@ -116,7 +119,10 @@ class AWSLambda(AWSSession):
 
         for req in self.pip_requirements:
             if 'docker_image' in kwargs:
-                print('Installing {} via docker image {}'.format(req, kwargs['docker_image']))
+                print('Installing {req} via docker image {docker}'.format(
+                    req=req,
+                    docker=kwargs['docker_image'])
+                )
                 execute_in_docker(kwargs['docker_image'], 'pip', args, req)
             else:
                 print('Installing {}'.format(req))
