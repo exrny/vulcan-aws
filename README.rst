@@ -12,8 +12,8 @@ Features
 Installation
 ------------
 
-You can install exr-builder from the Python Package Index (PyPI) or
-from source.
+You can install exr-builder from the Python Package Index (PyPI) or from
+source.
 
 Using pip
 
@@ -38,8 +38,7 @@ Contributors/Contributing
 If you want to make changes the repo is at
 https://github.com/exrny/exr-aws. You will need
 `pytest <http://www.pytest.org>`__ to run the tests and
-`exr-builder <https://github.com/exrny/exr-aws>`__ tool to build
-modules
+`exr-builder <https://github.com/exrny/exr-aws>`__ tool to build modules
 
 .. code:: bash
 
@@ -50,8 +49,8 @@ request <https://help.github.com/articles/using-pull-requests>`__ once
 you are done.
 
 If you find any bugs or need new features please raise a ticket in the
-`issues section <https://github.com/exrny/exr-aws/issues>`__ of
-the github repo.
+`issues section <https://github.com/exrny/exr-aws/issues>`__ of the
+github repo.
 
 License
 -------

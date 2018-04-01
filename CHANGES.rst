@@ -1,8 +1,7 @@
 Changes
 =======
 
-0.1.0 - ??/12/2017
+0.1.0 - 04/02/2018
 ------------------
 
 -  Initial release.
--  CloudFormation API added
