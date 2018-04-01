@@ -40,7 +40,11 @@ def execute(script, *args):
 
 
 def execute_in_docker(script, *args):
-    popen_args = ['docker', 'run', '-v', "{pwd}:/app".format(pwd=os.getcwd()), '-ti', '--rm', '-w', '/app']
+    popen_args = [
+        'docker', 'run', '-v',
+        "{pwd}:/app".format(pwd=os.getcwd()),
+        '-ti', '--rm', '-w', '/app'
+    ]
     popen_args.append(script)
 
     for arg in args:
