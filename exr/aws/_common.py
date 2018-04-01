@@ -39,6 +39,28 @@ def execute(script, *args):
         sys.exit(1)
 
 
+def execute_in_docker(script, *args):
+    popen_args = ['docker', 'run', '-v', "{pwd}:/app".format(pwd=os.getcwd()), '-ti', '--rm', '-w', '/app']
+    popen_args.append(script)
+
+    for arg in args:
+        if type(arg) == list:
+            popen_args.extend(arg)
+        else:
+            popen_args.append(arg)
+
+    try:
+        return check_call(popen_args, shell=False)
+    except CalledProcessError as ex:
+        # print(ex)
+        # sys.exit(ex.returncode)
+        raise ex
+    except Exception as ex:
+        print('Error running script '
+              '{} with args {}: {}'.format(script, args, ex))
+        sys.exit(1)
+
+
 def ls(walk_dir, pattern='*'):
     walk_dir = os.path.abspath(os.path.join(os.getcwd(), walk_dir))
     if not os.path.isdir(walk_dir):

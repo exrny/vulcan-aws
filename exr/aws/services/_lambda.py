@@ -5,7 +5,8 @@ import shutil
 import zipfile
 from boto3.s3.transfer import S3Transfer
 from exr.aws.services._session import AWSSession
-from exr.aws._common import execute, ls, which
+from exr.aws._common import ls, which
+from exr.aws._common import execute, execute_in_docker
 from subprocess import check_call, CalledProcessError
 from datetime import datetime
 
@@ -70,7 +71,7 @@ class AWSLambda(AWSSession):
 
         return True
 
-    def package(self):
+    def package(self, **kwargs):
         print('[ Packaging lambda deployment package ]')
         shutil.rmtree('target/distrib/', ignore_errors=True)
 
@@ -83,7 +84,7 @@ class AWSLambda(AWSSession):
         shutil.copytree('src/main/python/', 'target/distrib/',
                         ignore=shutil.ignore_patterns('*.pyc', 'tmp*'))
 
-        self.install_deps(['--target', 'target/distrib/'])
+        self.install_deps(['--target', 'target/distrib/'], docker_image = kwargs.get('docker_image', None))
 
         zipf = zipfile.ZipFile(
             'target/{}'.format(self.s3_filename), 'w', zipfile.ZIP_DEFLATED)
@@ -96,7 +97,7 @@ class AWSLambda(AWSSession):
 
         return True
 
-    def install_deps(self, pip_args=None):
+    def install_deps(self, pip_args=None, **kwargs):
         print('[ Installing lambda dependencies ]')
         print('[ Dependencies ]')
 
@@ -114,8 +115,12 @@ class AWSLambda(AWSSession):
                     args.append(pip_arg)
 
         for req in self.pip_requirements:
-            print('Installing {}'.format(req))
-            execute('pip', args, req)
+            if 'docker_image' in kwargs:
+                print('Installing {} via docker image {}'.format(req, kwargs['docker_image']))
+                execute_in_docker(kwargs['docker_image'], 'pip', args, req)
+            else:
+                print('Installing {}'.format(req))
+                execute('pip', args, req)
 
         if not self.pip_requirements or len(self.pip_requirements) == 0:
             print("Your lambda doesn't have any pip dependencies")
