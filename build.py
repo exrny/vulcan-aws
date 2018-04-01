@@ -17,6 +17,11 @@ def apidoc():
 
 
 @task()
+def validate():
+    nsh.pycodestyle('exr')
+
+
+@task(validate)
 def build():
     nsh.python('setup.py', 'bdist_wheel')
     nsh.pip.install('.')
@@ -26,8 +31,7 @@ def build():
 def test(*args):
     """
     Run unit tests.
-    """
-    nsh.pep8('exr')
+    """    
     pyTest = nsh.Command("py.test")
     pyTest(args)
 
@@ -98,7 +102,7 @@ def push():
     nsh.git('push', '--tags', '--verbose')
 
 
-@task()
+@task(validate)
 def release(ver=None):
     check_uncommited()
     update_version(ver)
