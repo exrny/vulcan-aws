@@ -231,8 +231,8 @@ class AWSS3(AWSSession):
         s3_bucket = url.netloc
         s3_key = url.path
 
-        if s3_key.endswith('/'):
-            s3_key = "%s%s" % (s3_key, s3_url)
+        # if s3_key.endswith('/'):
+        #     s3_key = "%s%s" % (s3_key, s3_url)
 
         if s3_key.startswith('/'):
             s3_key = s3_key[1:]
