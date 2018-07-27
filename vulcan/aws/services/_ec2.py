@@ -3,8 +3,8 @@ import botocore
 import os
 import uuid
 import json
-from exr.aws.services._session import AWSSession
-from exr.aws._common import json_serial
+from vulcan.aws.services._session import AWSSession
+from vulcan.aws._common import json_serial
 
 
 class AWSEC2(AWSSession):

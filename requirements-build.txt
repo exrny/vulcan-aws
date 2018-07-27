@@ -1,5 +1,5 @@
 pytest
 pycodestyle
 twine
-exr-builder
+vulcan-builder
 sh

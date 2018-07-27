@@ -1,5 +1,5 @@
 import boto3
-from exr.aws.services._session import AWSSession
+from vulcan.aws.services._session import AWSSession
 
 
 class AWSLogs(AWSSession):

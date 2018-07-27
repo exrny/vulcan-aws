@@ -6,49 +6,49 @@ import sys
 class TestAWS:
 
     def test_import(self):
-        import exr.aws
+        import vulcan.aws
 
 
 class TestAWSSession:
 
     def test_import(self):
-        from exr.aws import AWSSession
+        from vulcan.aws import AWSSession
 
 
 class TestAWSCloudFormation:
 
     def test_import(self):
-        from exr.aws import AWSCloudFormation
+        from vulcan.aws import AWSCloudFormation
 
 
 class TestAWSCloudFront:
 
     def test_import(self):
-        from exr.aws import AWSCloudFront
+        from vulcan.aws import AWSCloudFront
 
 
 class TestAWSLambda:
 
     def test_import(self):
-        from exr.aws import AWSLambda
+        from vulcan.aws import AWSLambda
 
 
 class TestAWSS3:
 
     def test_import(self):
-        from exr.aws import AWSS3
+        from vulcan.aws import AWSS3
 
 
 class TestAWSIAM:
 
     def test_import(self):
-        from exr.aws import AWSIAM
+        from vulcan.aws import AWSIAM
 
 
 class TestAWSEC2:
 
     def test_import(self):
-        from exr.aws import AWSEC2
+        from vulcan.aws import AWSEC2
         # ec2 = AWSEC2(profile_name='exrny.blue')
         # ec2.generate_ssh_config(tags=[
         #     {

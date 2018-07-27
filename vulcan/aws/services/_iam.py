@@ -4,8 +4,8 @@ import os
 import uuid
 import textwrap
 from botocore.exceptions import ClientError
-from exr.aws.services._session import AWSSession
-from exr.aws._common import generatePassword
+from vulcan.aws.services._session import AWSSession
+from vulcan.aws._common import generatePassword
 
 
 class AWSIAM(AWSSession):

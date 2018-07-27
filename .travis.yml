@@ -1,6 +1,6 @@
 language: python
 python:
-  - '2.7'
+  # - '2.7'
   - '3.4'
   - '3.5'
   - '3.6'
@@ -14,10 +14,10 @@ install:
   - pip install -r requirements-build.txt
 
 script:
-  - exrb test
+  - vb test
 
 jobs:
     include:
     - stage: deploy
       python: 3.6
-      script: exrb pypi
+      script: vb pypi

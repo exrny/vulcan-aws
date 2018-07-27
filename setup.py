@@ -1,12 +1,12 @@
 from setuptools import setup
-import exr.meta_aws
+import vulcan.meta_aws
 setup(
-    name='exr-aws',
-    version=exr.meta_aws.__version__,
+    name='vulcan-aws',
+    version=vulcan.meta_aws.__version__,
     author='Peter Salnikov',
     author_email='opensource@exrny.com',
-    url=exr.meta_aws.__website__,
-    packages=['exr', 'exr.aws', 'exr.aws.services'],
+    url=vulcan.meta_aws.__website__,
+    packages=['vulcan', 'vulcan.aws', 'vulcan.aws.services'],
     install_requires=['boto3'],
     license='MIT License',
     classifiers=[

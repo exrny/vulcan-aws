@@ -6,9 +6,9 @@ import json
 import sys
 import time
 from boto3.s3.transfer import S3Transfer
-from exr.aws.services._session import AWSSession
-from exr.aws import shared
-from exr.aws._common import dump
+from vulcan.aws.services._session import AWSSession
+from vulcan.aws import shared
+from vulcan.aws._common import dump
 
 try:
     from urlparse import urlparse

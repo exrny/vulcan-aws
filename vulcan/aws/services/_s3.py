@@ -10,7 +10,7 @@ import copy
 import traceback
 import sys
 from boto3.s3.transfer import S3Transfer
-from exr.aws.services._session import AWSSession
+from vulcan.aws.services._session import AWSSession
 from concurrent import futures
 
 try:

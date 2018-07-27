@@ -8,7 +8,7 @@ import sh
 import mimetypes
 import copy
 import uuid
-from exr.aws.services._session import AWSSession
+from vulcan.aws.services._session import AWSSession
 from concurrent import futures
 
 

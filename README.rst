@@ -1,4 +1,4 @@
-|Build Status|
+`Build Status <https://travis-ci.org/exrny/exr-aws>`__
 
 AWS boto3 helper libs
 =====================
@@ -19,13 +19,13 @@ Using pip
 
 .. code:: bash
 
-    $ pip install exr-aws
+   $ pip install exr-aws
 
 Using easy_install
 
 .. code:: bash
 
-    $ easy_install exr-aws
+   $ easy_install exr-aws
 
 Example
 -------
@@ -42,7 +42,7 @@ https://github.com/exrny/exr-aws. You will need
 
 .. code:: bash
 
-    $ nb test
+   $ nb test
 
 It will be great if you can raise a `pull
 request <https://help.github.com/articles/using-pull-requests>`__ once
@@ -57,6 +57,3 @@ License
 
 exr-builder is licensed under a `MIT
 license <http://opensource.org/licenses/MIT>`__
-
-.. |Build Status| image:: https://travis-ci.org/exrny/exr-aws.png?branch=master
-   :target: https://travis-ci.org/exrny/exr-aws

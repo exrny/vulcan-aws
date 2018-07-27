@@ -4,9 +4,9 @@ import os
 import shutil
 import zipfile
 from boto3.s3.transfer import S3Transfer
-from exr.aws.services._session import AWSSession
-from exr.aws._common import ls, which
-from exr.aws._common import execute, execute_in_docker
+from vulcan.aws.services._session import AWSSession
+from vulcan.aws._common import ls, which
+from vulcan.aws._common import execute, execute_in_docker
 from subprocess import check_call, CalledProcessError
 from datetime import datetime
 
