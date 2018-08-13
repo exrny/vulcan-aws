@@ -7,10 +7,11 @@ class AWSSession(object):
     def __init__(self, profile_name, region_name=None):
         self.profile_name = profile_name
         self.region_name = region_name
-        threading.local().boto3_sessions = dict()
+        self._thread_local = threading.local()
+        self._thread_local.boto3_sessions = dict()
 
     def __session(self):
-        sessions = threading.local().boto3_sessions
+        sessions = self._thread_local.boto3_sessions
         session_key = '{profile}.{region}'.format(
             profile=self.profile_name,
             region=self.region_name
