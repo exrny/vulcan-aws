@@ -132,7 +132,7 @@ class AWSLambda(AWSSession):
             print("Your lambda doesn't have any pip dependencies")
 
     def upload(self):
-        s3 = self.session.client('s3')
+        s3 = self.client('s3')
         lambda_package = os.path.normpath(os.path.join(
             os.getcwd(), 'target/', self.s3_filename))
         print("Uploading %s to temporary location s3://%s/%s" %
@@ -145,7 +145,7 @@ class AWSLambda(AWSSession):
         )
 
     def update_code(self, **kwargs):
-        lambdas = self.session.client('lambda')
+        lambdas = self.client('lambda')
         if kwargs and 'function_name' in kwargs:
             function_name = kwargs['function_name']
         else:
@@ -163,7 +163,7 @@ class AWSLambda(AWSSession):
         )
 
     def update_dev_alias(self):
-        lambdas = self.session.client('lambda')
+        lambdas = self.client('lambda')
         print('Updating function {} DEV alias to version $LATEST'.format(
             self.function_name))
         lambdas.update_alias(
@@ -177,7 +177,7 @@ class AWSLambda(AWSSession):
         pass
 
     def update_prod_alias(self):
-        lambdas = self.session.client('lambda')
+        lambdas = self.client('lambda')
         resp = lambdas.publish_version(
             FunctionName=self.function_name,
         )
@@ -193,7 +193,7 @@ class AWSLambda(AWSSession):
         )
 
     def test_local(self, event={}, **kwargs):
-        lambdas = self.session.client('lambda')
+        lambdas = self.client('lambda')
         if kwargs and 'function_name' in kwargs:
             function_name = kwargs['function_name']
         else:
