@@ -49,10 +49,3 @@ class TestAWSEC2:
 
     def test_import(self):
         from vulcan.aws import AWSEC2
-        # ec2 = AWSEC2(profile_name='exrny.blue')
-        # ec2.generate_ssh_config(tags=[
-        #     {
-        #       'name': 'Name',
-        #       'value': 'ecs-cluster-prod'
-        #     }
-        #   ])
