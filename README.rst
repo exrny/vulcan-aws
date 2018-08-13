@@ -1,4 +1,4 @@
-`Build Status <https://travis-ci.org/exrny/exr-aws>`__
+|Build Status|
 
 AWS boto3 helper libs
 =====================
@@ -57,3 +57,6 @@ License
 
 exr-builder is licensed under a `MIT
 license <http://opensource.org/licenses/MIT>`__
+
+.. |Build Status| image:: https://travis-ci.org/exrny/exr-aws.png?branch=master
+   :target: https://travis-ci.org/exrny/exr-aws
