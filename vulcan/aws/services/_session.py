@@ -32,7 +32,7 @@ class AWSSession(object):
         return sessions[session_key]
 
     def client(self, name):
-        return __session().client(name)
+        return self.__session().client(name)
 
     def resource(self, name):
-        return __session().resource(name)
+        return self.__session().resource(name)
