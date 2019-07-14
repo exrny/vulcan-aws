@@ -71,19 +71,24 @@ class AWSCloudFormation(AWSSession):
             else:
                 self.parameters = None
 
-            self.template = os.path.abspath(os.path.join(
-                os.getcwd(), './src/main/cloudformation/', self.template))
+            path_to_cloudformation = os.path.abspath(os.path.join(os.getcwd(), './src/cloudformation/'))
+            if not os.path.exists(path_to_cloudformation):
+                path_to_cloudformation = os.path.abspath(
+                    os.path.join(os.getcwd(), './src/main/cloudformation/')
+                )
+
+            path_to_resources = os.path.abspath(os.path.join(os.getcwd(), './src/resources/'))
+            if not os.path.exists(path_to_cloudformation):
+                path_to_resources = os.path.abspath(os.path.join(os.getcwd(), './src/main/resources/'))
+
+            self.template = os.path.abspath(os.path.join(path_to_cloudformation, self.template))
             for idx, template in enumerate(self.includes):
                 if not os.path.isabs(template):
                     if template.startswith('./') or template.startswith('../'):
                         self.includes[idx] = os.path.abspath(
                             os.path.join(os.getcwd(), template))
                     else:
-                        self.includes[idx] = os.path.abspath(os.path.join(
-                            os.getcwd(),
-                            './src/main/cloudformation/',
-                            template
-                        ))
+                        self.includes[idx] = os.path.abspath(os.path.join(path_to_cloudformation, template))
 
                 if not os.path.isfile(self.includes[idx]):
                     raise Exception("Can't find template file"
@@ -97,12 +102,7 @@ class AWSCloudFormation(AWSSession):
                         self.resources[idx] = os.path.abspath(
                             os.path.join(os.getcwd(), file))
                     else:
-                        self.resources[idx] = os.path.abspath(
-                            os.path.join(
-                                os.getcwd(),
-                                './src/main/resources/',
-                                file
-                            ))
+                        self.resources[idx] = os.path.abspath(os.path.join(path_to_resources, file))
 
                 if not os.path.isfile(self.resources[idx]):
                     raise Exception("Can't find resource file "
