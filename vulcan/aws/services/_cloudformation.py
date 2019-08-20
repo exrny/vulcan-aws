@@ -5,6 +5,7 @@ import uuid
 import json
 import sys
 import time
+from datetime import datetime, timezone
 from boto3.s3.transfer import S3Transfer
 from vulcan.aws.services._session import AWSSession
 from vulcan.aws import shared
@@ -16,6 +17,17 @@ except ImportError:
     from urllib.parse import urlparse
 
 shared.store['validated_templates'] = list()
+LOG_GROUP = 'cfnotify'
+
+STATUS_UPDATE_COMPLETE = ('UPDATE_COMPLETE', 'UPDATE_FAILED', 'UPDATE_ROLLBACK_FAILED')
+STATUS_CREATE_COMPLETE = ('CREATE_COMPLETE', 'CREATE_FAILED', 'DELETE_COMPLETE', 'DELETE_FAILED',
+                          'ROLLBACK_FAILED', 'ROLLBACK_COMPLETE')
+STATUS_DELETE_COMPLETE = ('DELETE_COMPLETE', 'DELETE_FAILED', 'CREATE_FAILED', 'ROLLBACK_FAILED',
+                          'UPDATE_ROLLBACK_FAILED', 'UPDATE_ROLLBACK_IN_PROGRESS')
+STATUS_NOT_IN_PROGRESS = list()
+STATUS_NOT_IN_PROGRESS.extend(STATUS_UPDATE_COMPLETE)
+STATUS_NOT_IN_PROGRESS.extend(STATUS_CREATE_COMPLETE)
+STATUS_NOT_IN_PROGRESS.extend(STATUS_DELETE_COMPLETE)
 
 
 class AWSCloudFormation(AWSSession):
@@ -154,9 +166,8 @@ class AWSCloudFormation(AWSSession):
         except botocore.exceptions.ClientError as err:
             err_msg = err.response['Error']['Message']
             err_code = err.response['Error']['Code']
-            if (err_msg != "Stack with id {} does not exist".format(
-                    self.stack_name) and
-                    err_code != 'ValidationError'):
+            if err_msg != "Stack with id {} does not exist".format(self.stack_name) and \
+               err_code != 'ValidationError':
                 return False
 
     def outputs(self, output_key, **kwargs):
@@ -201,9 +212,8 @@ class AWSCloudFormation(AWSSession):
         except botocore.exceptions.ClientError as err:
             err_msg = err.response['Error']['Message']
             err_code = err.response['Error']['Code']
-            if (err_msg != "Stack with id {} does not exist".format(
-                    self.stack_name) and
-                    err_code != 'ValidationError'):
+            if err_msg != "Stack with id {} does not exist".format(self.stack_name) and \
+               err_code != 'ValidationError':
                 if no_fail:
                     print("Stack with id "
                           "{} does not exist".format(self.stack_name))
@@ -268,6 +278,7 @@ class AWSCloudFormation(AWSSession):
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
         print("Creating stack {}".format(stack_name))
+        timestamp = datetime.now(timezone.utc)
         resp = cloudformation.create_stack(
             StackName=stack_name,
             TemplateURL=template_url,
@@ -277,10 +288,7 @@ class AWSCloudFormation(AWSSession):
                 self.parameters, kwargs.get('parameters', None))
         )
 
-        waiter = cloudformation.get_waiter('stack_create_complete')
-        waiter.wait(
-            StackName=resp['StackId']
-        )
+        self._print_events(resp['StackId'], stack_name, timestamp)
 
         return
 
@@ -296,6 +304,7 @@ class AWSCloudFormation(AWSSession):
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
         print("Updating stack {}".format(stack_name))
+        timestamp = datetime.now(timezone.utc)
         resp = cloudformation.update_stack(
             StackName=stack_name,
             TemplateURL=template_url,
@@ -304,10 +313,7 @@ class AWSCloudFormation(AWSSession):
                 self.parameters, kwargs.get('parameters', None))
         )
 
-        waiter = cloudformation.get_waiter('stack_update_complete')
-        waiter.wait(
-            StackName=resp['StackId']
-        )
+        self._print_events(resp['StackId'], stack_name, timestamp)
 
         return
 
@@ -318,14 +324,15 @@ class AWSCloudFormation(AWSSession):
         if 'stack_name' in kwargs:
             stack_name = kwargs.get('stack_name')
 
+        resp = cloudformation.describe_stacks(StackName=stack_name)
+
+        print('Deleting stack {}'.format(stack_name))
+        timestamp = datetime.now(timezone.utc)
         cloudformation.delete_stack(
-            StackName=stack_name
+            StackName=resp['Stacks'][0]['StackId']
         )
 
-        waiter = cloudformation.get_waiter('stack_delete_complete')
-        waiter.wait(
-            StackName=stack_name
-        )
+        self._print_events(resp['Stacks'][0]['StackId'], stack_name, timestamp)
 
         return
 
@@ -413,8 +420,8 @@ class AWSCloudFormation(AWSSession):
             next_token = None
             while True:
                 args = {
-                  'StackName': stack_name,
-                  'ChangeSetName': change_set['Id'],
+                    'StackName': stack_name,
+                    'ChangeSetName': change_set['Id'],
                 }
                 if next_token:
                     args['NextToken'] = next_token
@@ -423,11 +430,10 @@ class AWSCloudFormation(AWSSession):
 
                 for change in resp['Changes']:
                     print('{action}: {id} - {res_type}'.format(
-                            action=change['ResourceChange']['Action'],
-                            id=change['ResourceChange']['LogicalResourceId'],
-                            res_type=change['ResourceChange']['ResourceType'],
-                        )
-                    )
+                        action=change['ResourceChange']['Action'],
+                        id=change['ResourceChange']['LogicalResourceId'],
+                        res_type=change['ResourceChange']['ResourceType'],
+                    ))
 
                 if 'NextToken' not in resp:
                     break
@@ -442,11 +448,11 @@ class AWSCloudFormation(AWSSession):
                     ChangeSetName=change_set['Id'],
                 )
                 if resp['StatusReason'] == (
-                      "The submitted information "
-                      "didn't contain changes. "
-                      "Submit different information "
-                      "to create a change set."
-                      ):
+                    "The submitted information "
+                    "didn't contain changes. "
+                    "Submit different information "
+                    "to create a change set."
+                ):
                     print("No changes.")
                 else:
                     raise Exception("Unknown error", None, sys.exc_info()[2])
@@ -498,7 +504,7 @@ class AWSCloudFormation(AWSSession):
 
         s3_key = self.s3_key
         if not s3_key.endswith('/'):
-            s3_key = s3_key[:s3_key.rfind('/')+1]
+            s3_key = s3_key[:s3_key.rfind('/') + 1]
 
         for file in (self.includes + self.resources):
             file_s3_key = '{}{}'.format(s3_key, os.path.basename(file))
@@ -513,10 +519,8 @@ class AWSCloudFormation(AWSSession):
             )
 
     def _join_parameters(self, params1, params2):
-        if (
-            (params1 and type(params1) != list) or
-            (params2 and type(params2) != list)
-        ):
+        if (params1 and type(params1) != list) or \
+           (params2 and type(params2) != list):
             raise Exception("Parameters argument should be a list() or None")
 
         if not params1 and params2:
@@ -539,3 +543,54 @@ class AWSCloudFormation(AWSSession):
             return result
         else:
             return list()
+
+    def _print_events(self, root_stack_id, root_stack_name, start_ts):
+        cloudformation = self.client('cloudformation')
+
+        stack_ids = [root_stack_id]
+        stack_data_template = {
+            'event_ids_shown': set(),
+            'stack_name': root_stack_name
+        }
+        stack_data = {
+            root_stack_id: stack_data_template.copy()
+        }
+
+        paginator = cloudformation.get_paginator('describe_stack_events')
+
+        root_stack_running = True
+        while(root_stack_running):
+            for stack_id in stack_ids:
+                resp_iterator = paginator.paginate(StackName=stack_id)
+                for page in resp_iterator:
+                    for event in page['StackEvents']:
+                        phResId = event.get('PhysicalResourceId', None)
+                        if event['EventId'] not in stack_data[stack_id]['event_ids_shown'] and \
+                           event['Timestamp'] > start_ts:
+                            if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                               phResId and \
+                               phResId not in stack_ids:
+                                stack_ids.append(phResId)
+                                stack_data[phResId] = stack_data_template.copy()
+                                stack_data[phResId]['stack_name'] = event['LogicalResourceId']
+
+                            stack_data[stack_id].get('event_ids_shown').add(event['EventId'])
+
+                            logical_resource_id = event['LogicalResourceId']
+                            if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                               event['StackId'] == phResId:
+                                logical_resource_id = stack_data[stack_id]['stack_name']
+                            print(' / '.join((
+                                event['Timestamp'].strftime('%H:%m:%S'),
+                                stack_data[stack_id]['stack_name'].ljust(10),
+                                logical_resource_id.ljust(16),
+                                event['ResourceType'].ljust(32),
+                                event['ResourceStatus'].ljust(28),
+                                event.get('ResourceStatusReason', ''),
+                            )))
+
+                            if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                               root_stack_id == event['StackId'] and \
+                               root_stack_id == phResId and \
+                               event['ResourceStatus'] in STATUS_NOT_IN_PROGRESS:
+                                root_stack_running = False
