@@ -19,7 +19,10 @@ except ImportError:
 class AWSLambda(AWSSession):
 
     def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(kwargs['profile_name'])
+        super(self.__class__, self).__init__(
+            kwargs['profile_name'],
+            kwargs['region_name']
+        )
         self.profile_name = kwargs['profile_name']
         self.function_name = kwargs['function_name']
 
@@ -79,7 +82,7 @@ class AWSLambda(AWSSession):
         cwd = os.getcwd()
         print('[ Files ]')
         for name in files:
-            print(name[len(cwd)+1:])
+            print(name[len(cwd) + 1:])
 
         shutil.copytree('src/main/python/', 'target/distrib/',
                         ignore=shutil.ignore_patterns('*.pyc', 'tmp*'))
@@ -118,7 +121,7 @@ class AWSLambda(AWSSession):
                     args.append(pip_arg)
 
         for req in self.pip_requirements:
-            if 'docker_image' in kwargs:
+            if kwargs['docker_image']:
                 print('Installing {req} via docker image {docker}'.format(
                     req=req,
                     docker=kwargs['docker_image'])
@@ -204,7 +207,7 @@ class AWSLambda(AWSSession):
 
         sep = resp['Configuration']['Handler'].rfind('.')
         py_file_name = resp['Configuration']['Handler'][:sep]
-        py_method_name = resp['Configuration']['Handler'][sep+1:]
+        py_method_name = resp['Configuration']['Handler'][sep + 1:]
 
         import logging
         logging.basicConfig()

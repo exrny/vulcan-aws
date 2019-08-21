@@ -18,20 +18,20 @@ def apidoc():
 
 @task()
 def validate():
-    nsh.pycodestyle('vulcan', '--max-line-length=110')
+    nsh.pycodestyle('vulcan', '--config=.pycodestyle')
 
 
 @task(validate)
 def build():
-    nsh.python('setup.py', 'bdist_wheel')
-    nsh.pip.install('.')
+    nsh.python3('setup.py', 'bdist_wheel')
+    nsh.pip3.install('.')
 
 
 @task(build)
 def test(*args):
     """
     Run unit tests.
-    """    
+    """
     pyTest = nsh.Command("py.test")
     pyTest(args)
 
@@ -58,7 +58,7 @@ def update_version(ver=None):
         file_str = f.read()
 
     if not ver:
-        regexp = re.compile('__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
+        regexp = re.compile(r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
         m = regexp.search(file_str)
         if m:
             ver = m.group(1)
@@ -67,30 +67,28 @@ def update_version(ver=None):
     ver = '{}.{}'.format(ver[:ver.rfind('.')], minor_ver+1)
 
     file_str = re.sub(
-        '__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*',
-        '__version__ = "{}"\n'.format(ver),
+        r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*',
+        r'__version__ = "{}"\n'.format(ver),
         file_str)
 
     with open('vulcan/meta_aws.py', 'w') as f:
         f.write(file_str)
 
-    nsh.git('commit', 'vulcan/meta_aws.py', '-m',
-           'Version updated to {}'.format(ver))
+    nsh.git('commit', 'vulcan/meta_aws.py', '-m', 'Version updated to {}'.format(ver))
 
 
 @task()
 def create_tag():
     with open('vulcan/meta_aws.py', 'r') as f:
         file_str = f.read()
-    regexp = re.compile('__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
+    regexp = re.compile(r'__version__\s*\=\s*\"([\d\w\.\-\_]+)\"\s*')
     m = regexp.search(file_str)
     if m:
         ver = m.group(1)
     else:
         raise "Can't find/parse current version in './vulcan/meta_aws.py'"
 
-    nsh.git('tag', '-a', '-m', 'Tagging version {}'.format(ver),
-           ver)
+    nsh.git('tag', '-a', '-m', 'Tagging version {}'.format(ver), ver)
 
 
 @task()
@@ -127,5 +125,6 @@ def pypi():
     args.append('dist/vulcan-aws-*')
 
     nsh.twine(args)
+
 
 __DEFAULT__ = test

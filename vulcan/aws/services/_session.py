@@ -15,7 +15,7 @@ class AWSSession(object):
         session_key = '{profile}.{region}'.format(
             profile=self.profile_name,
             region=self.region_name
-          )
+        )
 
         if session_key not in sessions:
             if self.profile_name in boto3.session.Session().available_profiles:
