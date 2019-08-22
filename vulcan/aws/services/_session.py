@@ -9,6 +9,7 @@ class AWSSession(object):
         self.region_name = region_name
         self._thread_local = threading.local()
         self._thread_local.boto3_sessions = dict()
+        self._thread_local.cache = dict()
 
     def __session(self):
         sessions = self._thread_local.boto3_sessions
@@ -37,3 +38,12 @@ class AWSSession(object):
 
     def resource(self, name):
         return self.__session().resource(name)
+
+    def cache(self, key, value=None):
+        if value:
+            cache = self._thread_local.cache
+            cache[key] = value
+            return value
+        else:
+            cache = self._thread_local.cache
+            return cache.get(key, None)

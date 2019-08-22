@@ -185,28 +185,33 @@ class AWSCloudFormation(AWSSession):
         no_fail = False
         if kwargs:
             no_fail = kwargs.get('no_fail', False)
+            no_cache = kwargs.get('no_cache', False)
 
         try:
-            stack = None
+            stack_outputs = None
             nextToken = None
-            while not stack:
-                resp = None
-                if nextToken:
-                    resp = cloudformation.describe_stacks(
-                        StackName=self.stack_name, NextToken=nextToken)
-                else:
-                    resp = cloudformation.describe_stacks(
-                        StackName=self.stack_name)
+            if not no_cache:
+                stack_outputs = self.cache('cloudformation.outputs.'.format(self.stack_name))
 
-                for stack in resp['Stacks']:
-                    if stack['StackStatus'] in STACK_EXISTS_STATES:
-                        break
-                if 'NextToken' in stack:
-                    nextToken = stack['NextToken']
+            if not stack_outputs:
+                stack = None
+                stack_outputs = dict()
+                paginator = cloudformation.get_paginator('describe_stacks')
+                page_iterator = paginator.paginate(StackName=self.stack_name)
+                break_for = False
+                for page in page_iterator:
+                    for stack in page['Stacks']:
+                        if stack['StackStatus'] in STACK_EXISTS_STATES:
+                            stack_outputs = stack.get('Outputs', dict())
+                            self.cache(
+                                'cloudformation.outputs.'.format(self.stack_name),
+                                stack_outputs
+                            )
+                            break_for = True
+                            break
+                    break if break_for
 
-            # output_value = None
-            if 'Outputs' in stack:
-                for output in stack['Outputs']:
+                for output in stack_outputs:
                     if output['OutputKey'] == output_key:
                         return output['OutputValue']
         except botocore.exceptions.ClientError as err:
