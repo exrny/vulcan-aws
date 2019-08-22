@@ -209,7 +209,8 @@ class AWSCloudFormation(AWSSession):
                             )
                             break_for = True
                             break
-                    break if break_for
+                    if break_for:
+                        break 
 
                 for output in stack_outputs:
                     if output['OutputKey'] == output_key:
