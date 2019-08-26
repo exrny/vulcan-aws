@@ -183,6 +183,7 @@ class AWSCloudFormation(AWSSession):
         ]
 
         no_fail = False
+        no_cache = False
         if kwargs:
             no_fail = kwargs.get('no_fail', False)
             no_cache = kwargs.get('no_cache', False)
@@ -196,6 +197,7 @@ class AWSCloudFormation(AWSSession):
             if not stack_outputs:
                 stack = None
                 stack_outputs = dict()
+                print("cloudformation.describe_stacks(): describe {}".format(self.stack_name))
                 paginator = cloudformation.get_paginator('describe_stacks')
                 page_iterator = paginator.paginate(StackName=self.stack_name)
                 break_for = False
