@@ -171,10 +171,7 @@ class AWSCloudFormation(AWSSession):
                err_code != 'ValidationError':
                 return False
 
-    def outputs(self, output_key, **kwargs):
-        return self.output(output_key, **kwargs)
-
-    def output(self, output_key, **kwargs):
+    def outputs(self, output_key=None, **kwargs):
         cloudformation = self.client('cloudformation')
         STACK_EXISTS_STATES = [
             'CREATE_COMPLETE',
@@ -214,32 +211,51 @@ class AWSCloudFormation(AWSSession):
                     for stack in page['Stacks']:
                         if stack['StackStatus'] in STACK_EXISTS_STATES:
                             stack_outputs = stack.get('Outputs', dict())
-                            self.cache(
-                                'cloudformation.outputs.'.format(self.stack_name),
-                                stack_outputs
-                            )
+                            self.cache(cache_key, stack_outputs)
                             break_for = True
                             break
                     if break_for:
                         break
 
-                for output in stack_outputs:
-                    if output['OutputKey'] == output_key:
-                        return output['OutputValue']
+                if output_key:
+                    print('WARING: outputs method is deprecated, use output instead')
+                    for output in stack_outputs:
+                        if output['OutputKey'] == output_key:
+                            return output['OutputValue']
+                    print("Can't find output parameter {} in stack {} under {} profile".format(
+                        output_key,
+                        self.stack_name,
+                        self.profile_name
+                    ))
+
+                    return None
+                else:
+                    return stack_outputs
+
         except botocore.exceptions.ClientError as err:
             err_msg = err.response['Error']['Message']
             err_code = err.response['Error']['Code']
             if err_msg != "Stack with id {} does not exist".format(self.stack_name) and \
                err_code != 'ValidationError':
                 if no_fail:
-                    print("Stack with id "
-                          "{} does not exist".format(self.stack_name))
+                    print("Stack with id {} does not exist".format(self.stack_name))
                 else:
                     raise Exception("Stack with id {} does not exist".format(
                         self.stack_name), sys.exc_info()[2])
 
-        print("Can't find output parameter %s in stack %s under %s profile" %
-              (output_key, self.stack_name, self.profile_name))
+    def output(self, output_key, **kwargs):
+        outputs = self.outputs(**kwargs)
+
+        for output in outputs:
+            if output['OutputKey'] == output_key:
+                return output['OutputValue']
+
+        print("Can't find output parameter {} in stack {} under {} profile".format(
+            output_key,
+            self.stack_name,
+            self.profile_name
+        ))
+
         return None
 
     def validate(self, details=False):
@@ -307,6 +323,17 @@ class AWSCloudFormation(AWSSession):
 
         self._print_events(resp['StackId'], stack_name, timestamp)
 
+        outputs = self.outputs()
+        if len(outputs) == 0:
+            print("Stack {} don't have nay outputs".format(self.stack_name))
+        else:
+            print("Stack {} outputs:".format(self.stack_name))
+            for output in outputs:
+                print('{key}: {value}'.format(
+                    key=output['OutputKey'],
+                    value=output['OutputValue'],
+                ))
+
         return
 
     def update(self, **kwargs):
@@ -332,6 +359,17 @@ class AWSCloudFormation(AWSSession):
 
         self._print_events(resp['StackId'], stack_name, timestamp)
 
+        outputs = self.outputs()
+        if len(outputs) == 0:
+            print("Stack {} don't have nay outputs".format(self.stack_name))
+        else:
+            print("Stack {} outputs:".format(self.stack_name))
+            for output in outputs:
+                print('{key}: {value}'.format(
+                    key=output['OutputKey'],
+                    value=output['OutputValue'],
+                ))
+
         return
 
     def delete(self, **kwargs):
@@ -350,6 +388,13 @@ class AWSCloudFormation(AWSSession):
         )
 
         self._print_events(resp['Stacks'][0]['StackId'], stack_name, timestamp)
+
+        cache_key = 'cloudformation.outputs.{}.{}.{}'.format(
+            self.region_name,
+            self.profile_name,
+            self.stack_name
+        )
+        self.cache(cache_key, list())
 
         return
 
