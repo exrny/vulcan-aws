@@ -19,7 +19,7 @@ class AWSSession(object):
         )
 
         if session_key not in sessions:
-            print("[{}] session.Session(): key={}".format(threading.get_ident(), session_key))
+            # print("[{}] session.Session(): key={}".format(threading.get_ident(), session_key))
             if self.profile_name in boto3.session.Session().available_profiles:
                 if self.region_name:
                     sessions[session_key] = boto3.session.Session(

@@ -4,7 +4,9 @@ import os
 import uuid
 import json
 import sys
+import re
 import time
+import textwrap
 import threading
 from datetime import datetime, timezone
 from boto3.s3.transfer import S3Transfer
@@ -171,6 +173,22 @@ class AWSCloudFormation(AWSSession):
                err_code != 'ValidationError':
                 return False
 
+    def print_outputs(self, **kwargs):
+        stack_outputs = self.outputs(**kwargs)
+
+        if len(outputs) == 0:
+            print("Stack {} don't have any outputs".format(self.stack_name))
+        else:
+            print("Stack {} outputs:".format(self.stack_name))
+            max_name_len = 0
+            for output in outputs:
+                max_name_len = max(max_name_len, len(output['OutputKey']))
+            for output in outputs:
+                print(' '.join([
+                    output['OutputKey'].ljust(max_name_len) + ':',
+                    output['OutputValue'],
+                ]))
+
     def outputs(self, output_key=None, **kwargs):
         cloudformation = self.client('cloudformation')
         STACK_EXISTS_STATES = [
@@ -195,19 +213,12 @@ class AWSCloudFormation(AWSSession):
         )
         if not no_cache:
             stack_outputs = self.cache(cache_key)
-            print("[{}] cloudformation.describe_stacks(): from cache -> key={}".format(
-                threading.get_ident(),
-                cache_key
-            ))
 
         if not stack_outputs:
             try:
                 stack = None
                 stack_outputs = list()
-                print("[{}] cloudformation.describe_stacks(): from api -> key={}".format(
-                    threading.get_ident(),
-                    cache_key
-                ))
+
                 paginator = cloudformation.get_paginator('describe_stacks')
                 page_iterator = paginator.paginate(StackName=self.stack_name)
                 break_for = False
@@ -232,15 +243,16 @@ class AWSCloudFormation(AWSSession):
                             self.stack_name), sys.exc_info()[2])
 
         if output_key:
-            print('WARING: outputs method is deprecated, use output instead')
+            print('AWSCloudFormation.output(): WARING: outputs method is deprecated, use output instead')
             for output in stack_outputs:
                 if output['OutputKey'] == output_key:
                     return output['OutputValue']
-            print("Can't find output parameter {} in stack {} under {} profile".format(
-                output_key,
-                self.stack_name,
-                self.profile_name
-            ))
+            print("AWSCloudFormation.output(): " +
+                  "Can't find output parameter {} in stack {} under {} profile".format(
+                      output_key,
+                      self.stack_name,
+                      self.profile_name
+                  ))
 
             return None
         else:
@@ -315,16 +327,47 @@ class AWSCloudFormation(AWSSession):
             self.s3_bucket, self.s3_key)
         print("Creating stack {}".format(stack_name))
         timestamp = datetime.now(timezone.utc)
-        resp = cloudformation.create_stack(
-            StackName=stack_name,
-            TemplateURL=template_url,
-            Capabilities=['CAPABILITY_NAMED_IAM'],
-            OnFailure=self.on_failure,
-            Parameters=self._join_parameters(
-                self.parameters, kwargs.get('parameters', None))
-        )
+        stack_id = None
+        parameters = self._join_parameters(self.parameters, kwargs.get('parameters', None))
+        try:
+            resp = cloudformation.create_stack(
+                StackName=stack_name,
+                TemplateURL=template_url,
+                Capabilities=['CAPABILITY_NAMED_IAM'],
+                OnFailure=self.on_failure,
+                Parameters=parameters
+            )
+            stack_id = resp['StackId']
+        except botocore.exceptions.ParamValidationError as error:
+            if str(error).startswith("Parameter validation failed:\nInvalid type for parameter"):
+                res = re.search((r'Invalid type for parameter Parameters\[(\d)\].ParameterValue, '
+                                r'value: None, type: (.+), valid types: (.+)'), str(error))
+                param_idx = int(res.group(1))
+                param_type_asis = res.group(2)
+                param_type_tobe = res.group(3)
 
-        self._print_events(resp['StackId'], stack_name, timestamp)
+                print('Validation error:')
+                print('Parameter {param_name} has invalid type/value.'.format(
+                    param_name=parameters[param_idx]['ParameterKey']
+                ))
+                print('Expected: {expected}, Actual: {actual}/{value}'.format(
+                    expected=param_type_tobe,
+                    actual=param_type_asis,
+                    value=parameters[param_idx]['ParameterValue']
+                ))
+                sys.exit(1)
+            else:
+                raise error
+        except botocore.exceptions.ClientError as error:
+            err_msg = error.response['Error']['Message']
+            err_code = error.response['Error']['Code']
+            if err_code == 'ValidationError':
+                print('Validation error: {}'.format(err_msg))
+                sys.exit(1)
+            else:
+                raise error
+
+        self._print_events(stack_id, stack_name, timestamp)
 
         outputs = self.outputs(no_cache=True)
         if len(outputs) == 0:
@@ -609,6 +652,15 @@ class AWSCloudFormation(AWSSession):
         else:
             return list()
 
+    def _trunc(self, text, length):
+        if len(text) > length:
+            ln_before = int(length / 2) - 2 + int(length / 4)
+            ln_after = length - ln_before - 2
+            result = text[:ln_before] + '..' + text[-ln_after:]
+            return result
+        else:
+            return text.ljust(length)
+
     def _print_events(self, root_stack_id, root_stack_name, start_ts):
         cloudformation = self.client('cloudformation')
 
@@ -642,14 +694,16 @@ class AWSCloudFormation(AWSSession):
                             stack_data[stack_id].get('event_ids_shown').add(event['EventId'])
 
                             logical_resource_id = event['LogicalResourceId']
+
                             if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
                                event['StackId'] == phResId:
                                 logical_resource_id = stack_data[stack_id]['stack_name']
+
                             print(' / '.join((
                                 event['Timestamp'].strftime('%H:%m:%S'),
-                                stack_data[stack_id]['stack_name'].ljust(10),
-                                logical_resource_id.ljust(16),
-                                event['ResourceType'].ljust(32),
+                                self._trunc(stack_data[stack_id]['stack_name'], 16),
+                                self._trunc(logical_resource_id, 24),
+                                event['ResourceType'].replace('AWS::', '').ljust(26),
                                 event['ResourceStatus'].ljust(28),
                                 event.get('ResourceStatusReason', ''),
                             )))
