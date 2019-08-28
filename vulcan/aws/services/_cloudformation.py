@@ -186,21 +186,25 @@ class AWSCloudFormation(AWSSession):
             no_fail = kwargs.get('no_fail', False)
             no_cache = kwargs.get('no_cache', False)
 
-        try:
-            stack_outputs = None
-            nextToken = None
-            cache_key = 'cloudformation.outputs.{}.{}.{}'.format(
-                self.region_name,
-                self.profile_name,
-                self.stack_name
-            )
-            if not no_cache:
-                stack_outputs = self.cache(cache_key)
+        stack_outputs = None
+        nextToken = None
+        cache_key = 'cloudformation.outputs.{}.{}.{}'.format(
+            self.region_name,
+            self.profile_name,
+            self.stack_name
+        )
+        if not no_cache:
+            stack_outputs = self.cache(cache_key)
+            print("[{}] cloudformation.describe_stacks(): from cache -> key={}".format(
+                threading.get_ident(),
+                cache_key
+            ))
 
-            if not stack_outputs:
+        if not stack_outputs:
+            try:
                 stack = None
-                stack_outputs = dict()
-                print("[{}] cloudformation.describe_stacks(): key={}".format(
+                stack_outputs = list()
+                print("[{}] cloudformation.describe_stacks(): from api -> key={}".format(
                     threading.get_ident(),
                     cache_key
                 ))
@@ -210,43 +214,42 @@ class AWSCloudFormation(AWSSession):
                 for page in page_iterator:
                     for stack in page['Stacks']:
                         if stack['StackStatus'] in STACK_EXISTS_STATES:
-                            stack_outputs = stack.get('Outputs', dict())
+                            stack_outputs = stack.get('Outputs', list())
                             self.cache(cache_key, stack_outputs)
                             break_for = True
                             break
                     if break_for:
                         break
+            except botocore.exceptions.ClientError as err:
+                err_msg = err.response['Error']['Message']
+                err_code = err.response['Error']['Code']
+                if err_msg != "Stack with id {} does not exist".format(self.stack_name) and \
+                   err_code != 'ValidationError':
+                    if no_fail:
+                        print("Stack with id {} does not exist".format(self.stack_name))
+                    else:
+                        raise Exception("Stack with id {} does not exist".format(
+                            self.stack_name), sys.exc_info()[2])
 
-                if output_key:
-                    print('WARING: outputs method is deprecated, use output instead')
-                    for output in stack_outputs:
-                        if output['OutputKey'] == output_key:
-                            return output['OutputValue']
-                    print("Can't find output parameter {} in stack {} under {} profile".format(
-                        output_key,
-                        self.stack_name,
-                        self.profile_name
-                    ))
+        if output_key:
+            print('WARING: outputs method is deprecated, use output instead')
+            for output in stack_outputs:
+                if output['OutputKey'] == output_key:
+                    return output['OutputValue']
+            print("Can't find output parameter {} in stack {} under {} profile".format(
+                output_key,
+                self.stack_name,
+                self.profile_name
+            ))
 
-                    return None
-                else:
-                    return stack_outputs
-
-        except botocore.exceptions.ClientError as err:
-            err_msg = err.response['Error']['Message']
-            err_code = err.response['Error']['Code']
-            if err_msg != "Stack with id {} does not exist".format(self.stack_name) and \
-               err_code != 'ValidationError':
-                if no_fail:
-                    print("Stack with id {} does not exist".format(self.stack_name))
-                else:
-                    raise Exception("Stack with id {} does not exist".format(
-                        self.stack_name), sys.exc_info()[2])
+            return None
+        else:
+            return stack_outputs
 
     def output(self, output_key, **kwargs):
-        outputs = self.outputs(**kwargs)
+        stack_outputs = self.outputs(**kwargs)
 
-        for output in outputs:
+        for output in stack_outputs:
             if output['OutputKey'] == output_key:
                 return output['OutputValue']
 
@@ -323,9 +326,9 @@ class AWSCloudFormation(AWSSession):
 
         self._print_events(resp['StackId'], stack_name, timestamp)
 
-        outputs = self.outputs()
+        outputs = self.outputs(no_cache=True)
         if len(outputs) == 0:
-            print("Stack {} don't have nay outputs".format(self.stack_name))
+            print("Stack {} don't have any outputs".format(self.stack_name))
         else:
             print("Stack {} outputs:".format(self.stack_name))
             for output in outputs:
@@ -359,9 +362,9 @@ class AWSCloudFormation(AWSSession):
 
         self._print_events(resp['StackId'], stack_name, timestamp)
 
-        outputs = self.outputs()
+        outputs = self.outputs(no_cache=True)
         if len(outputs) == 0:
-            print("Stack {} don't have nay outputs".format(self.stack_name))
+            print("Stack {} don't have any outputs".format(self.stack_name))
         else:
             print("Stack {} outputs:".format(self.stack_name))
             for output in outputs:
