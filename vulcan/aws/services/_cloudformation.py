@@ -5,6 +5,7 @@ import uuid
 import json
 import sys
 import time
+import threading
 from datetime import datetime, timezone
 from boto3.s3.transfer import S3Transfer
 from vulcan.aws.services._session import AWSSession
@@ -191,13 +192,21 @@ class AWSCloudFormation(AWSSession):
         try:
             stack_outputs = None
             nextToken = None
+            cache_key = 'cloudformation.outputs.{}.{}.{}'.format(
+                self.region_name,
+                self.profile_name,
+                self.stack_name
+            )
             if not no_cache:
-                stack_outputs = self.cache('cloudformation.outputs.'.format(self.stack_name))
+                stack_outputs = self.cache(cache_key)
 
             if not stack_outputs:
                 stack = None
                 stack_outputs = dict()
-                print("cloudformation.describe_stacks(): describe {}".format(self.stack_name))
+                print("[{}] cloudformation.describe_stacks(): key={}".format(
+                    threading.get_ident(),
+                    cache_key
+                ))
                 paginator = cloudformation.get_paginator('describe_stacks')
                 page_iterator = paginator.paginate(StackName=self.stack_name)
                 break_for = False

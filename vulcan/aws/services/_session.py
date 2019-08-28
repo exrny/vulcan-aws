@@ -13,13 +13,13 @@ class AWSSession(object):
 
     def __session(self):
         sessions = self._thread_local.boto3_sessions
-        session_key = '{profile}.{region}'.format(
-            profile=self.profile_name,
-            region=self.region_name
+        session_key = '{}.{}'.format(
+            self.region_name,
+            self.profile_name
         )
 
         if session_key not in sessions:
-            print("session.Session(): new {}".format(self.profile_name))
+            print("[{}] session.Session(): key={}".format(threading.get_ident(), session_key))
             if self.profile_name in boto3.session.Session().available_profiles:
                 if self.region_name:
                     sessions[session_key] = boto3.session.Session(
