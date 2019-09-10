@@ -13,6 +13,7 @@ from boto3.s3.transfer import S3Transfer
 from vulcan.aws.services._session import AWSSession
 from vulcan.aws import shared
 from vulcan.aws._common import dump
+from awsretry import AWSRetry
 
 try:
     from urlparse import urlparse
@@ -678,38 +679,45 @@ class AWSCloudFormation(AWSSession):
         root_stack_running = True
         while(root_stack_running):
             for stack_id in stack_ids:
-                resp_iterator = paginator.paginate(StackName=stack_id)
-                for page in resp_iterator:
-                    for event in page['StackEvents']:
-                        phResId = event.get('PhysicalResourceId', None)
-                        if event['EventId'] not in stack_data[stack_id]['event_ids_shown'] and \
-                           event['Timestamp'] > start_ts:
-                            if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
-                               phResId and \
-                               phResId not in stack_ids:
-                                stack_ids.append(phResId)
-                                stack_data[phResId] = stack_data_template.copy()
-                                stack_data[phResId]['stack_name'] = event['LogicalResourceId']
+                try:
+                    resp_iterator = paginator.paginate(StackName=stack_id)
+                    for page in resp_iterator:
+                        for event in page['StackEvents']:
+                            phResId = event.get('PhysicalResourceId', None)
+                            if event['EventId'] not in stack_data[stack_id]['event_ids_shown'] and \
+                               event['Timestamp'] > start_ts:
+                                if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                                   phResId and \
+                                   phResId not in stack_ids:
+                                    stack_ids.append(phResId)
+                                    stack_data[phResId] = stack_data_template.copy()
+                                    stack_data[phResId]['stack_name'] = event['LogicalResourceId']
 
-                            stack_data[stack_id].get('event_ids_shown').add(event['EventId'])
+                                stack_data[stack_id].get('event_ids_shown').add(event['EventId'])
 
-                            logical_resource_id = event['LogicalResourceId']
+                                logical_resource_id = event['LogicalResourceId']
 
-                            if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
-                               event['StackId'] == phResId:
-                                logical_resource_id = stack_data[stack_id]['stack_name']
+                                if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                                   event['StackId'] == phResId:
+                                    logical_resource_id = stack_data[stack_id]['stack_name']
 
-                            print(' / '.join((
-                                event['Timestamp'].strftime('%H:%m:%S'),
-                                self._trunc(stack_data[stack_id]['stack_name'], 16),
-                                self._trunc(logical_resource_id, 24),
-                                event['ResourceType'].replace('AWS::', '').ljust(26),
-                                event['ResourceStatus'].ljust(28),
-                                event.get('ResourceStatusReason', ''),
-                            )))
+                                print(' / '.join((
+                                    event['Timestamp'].strftime('%H:%m:%S'),
+                                    self._trunc(stack_data[stack_id]['stack_name'], 16),
+                                    self._trunc(logical_resource_id, 24),
+                                    event['ResourceType'].replace('AWS::', '').ljust(26),
+                                    event['ResourceStatus'].ljust(28),
+                                    event.get('ResourceStatusReason', ''),
+                                )))
 
-                            if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
-                               root_stack_id == event['StackId'] and \
-                               root_stack_id == phResId and \
-                               event['ResourceStatus'] in STATUS_NOT_IN_PROGRESS:
-                                root_stack_running = False
+                                if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                                   root_stack_id == event['StackId'] and \
+                                   root_stack_id == phResId and \
+                                   event['ResourceStatus'] in STATUS_NOT_IN_PROGRESS:
+                                    root_stack_running = False
+                except botocore.exceptions.ClientError as err:
+                    err_msg = err.response['Error']['Message']
+                    # err_code = err.response['Error']['Code']
+                    if err_msg.startswith(
+                            'An error occurred (Throttling) when calling the DescribeStackEvents operation'):
+                        time.sleep(1)
