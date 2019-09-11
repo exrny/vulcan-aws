@@ -704,7 +704,7 @@ class AWSCloudFormation(AWSSession):
                                     event['Timestamp'].strftime('%H:%m:%S'),
                                     self._trunc(stack_data[stack_id]['stack_name'], 16),
                                     self._trunc(logical_resource_id, 24),
-                                    event['ResourceType'].replace('AWS::', '').ljust(26),
+                                    event['ResourceType'].replace('AWS::', '').ljust(30),
                                     event['ResourceStatus'].ljust(28),
                                     event.get('ResourceStatusReason', ''),
                                 )))
