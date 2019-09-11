@@ -716,9 +716,9 @@ class AWSCloudFormation(AWSSession):
                                     root_stack_running = False
                 except botocore.exceptions.ClientError as err:
                     err_msg = err.response['Error']['Message']
-                    # err_code = err.response['Error']['Code']
-                    if err_msg.startswith(
-                            'An error occurred (Throttling) when calling the DescribeStackEvents operation'):
+                    err_code = err.response['Error']['Code']
+                    if err_msg == 'Rate exceeded' and err_code == 'Throttling':
                         time.sleep(1)
                     else:
+                        print('Msg: {}, Code: {}'.format(err_msg, err_code))
                         raise Exception(err)
