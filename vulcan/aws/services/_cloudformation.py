@@ -13,7 +13,6 @@ from boto3.s3.transfer import S3Transfer
 from vulcan.aws.services._session import AWSSession
 from vulcan.aws import shared
 from vulcan.aws._common import dump
-from awsretry import AWSRetry
 
 try:
     from urlparse import urlparse
@@ -721,3 +720,5 @@ class AWSCloudFormation(AWSSession):
                     if err_msg.startswith(
                             'An error occurred (Throttling) when calling the DescribeStackEvents operation'):
                         time.sleep(1)
+                    else:
+                        raise Exception(err)
