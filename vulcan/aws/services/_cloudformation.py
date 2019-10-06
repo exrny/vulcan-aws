@@ -713,11 +713,15 @@ class AWSCloudFormation(AWSSession):
                                    root_stack_id == event['StackId'] and \
                                    root_stack_id == phResId and \
                                    event['ResourceStatus'] in STATUS_NOT_IN_PROGRESS:
+                                    print('Stopping events printing on status {}'.format(
+                                        event['ResourceStatus']
+                                    ))
                                     root_stack_running = False
                 except botocore.exceptions.ClientError as err:
                     err_msg = err.response['Error']['Message']
                     err_code = err.response['Error']['Code']
                     if err_msg == 'Rate exceeded' and err_code == 'Throttling':
+                        print('Rate exceeded. Forcing timeout.')
                         time.sleep(1)
                     else:
                         print('Msg: {}, Code: {}'.format(err_msg, err_code))
