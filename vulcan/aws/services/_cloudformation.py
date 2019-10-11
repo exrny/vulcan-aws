@@ -22,15 +22,17 @@ except ImportError:
 shared.store['validated_templates'] = list()
 LOG_GROUP = 'cfnotify'
 
-STATUS_UPDATE_COMPLETE = ('UPDATE_COMPLETE', 'UPDATE_FAILED', 'UPDATE_ROLLBACK_FAILED')
-STATUS_CREATE_COMPLETE = ('CREATE_COMPLETE', 'CREATE_FAILED', 'DELETE_COMPLETE', 'DELETE_FAILED',
-                          'ROLLBACK_FAILED', 'ROLLBACK_COMPLETE')
-STATUS_DELETE_COMPLETE = ('DELETE_COMPLETE', 'DELETE_FAILED', 'CREATE_FAILED', 'ROLLBACK_FAILED',
-                          'UPDATE_ROLLBACK_FAILED')
-STATUS_NOT_IN_PROGRESS = list()
-STATUS_NOT_IN_PROGRESS.extend(STATUS_UPDATE_COMPLETE)
-STATUS_NOT_IN_PROGRESS.extend(STATUS_CREATE_COMPLETE)
-STATUS_NOT_IN_PROGRESS.extend(STATUS_DELETE_COMPLETE)
+STATUS_UPDATE_COMPLETE = ('UPDATE_COMPLETE', 'UPDATE_FAILED', 'UPDATE_ROLLBACK_FAILED',
+                          'UPDATE_ROLLBACK_FAILED', 'UPDATE_ROLLBACK_COMPLETE')
+STATUS_CREATE_COMPLETE = ('CREATE_COMPLETE', 'CREATE_FAILED')
+STATUS_DELETE_COMPLETE = ('DELETE_COMPLETE', 'DELETE_FAILED')
+STATUS_ROLLBACK_COMPLETE = ('ROLLBACK_FAILED', 'ROLLBACK_COMPLETE')
+
+STATUS_CF_RUN_COMPLETE = list()
+STATUS_CF_RUN_COMPLETE.extend(STATUS_UPDATE_COMPLETE)
+STATUS_CF_RUN_COMPLETE.extend(STATUS_CREATE_COMPLETE)
+STATUS_CF_RUN_COMPLETE.extend(STATUS_DELETE_COMPLETE)
+STATUS_CF_RUN_COMPLETE.extend(STATUS_ROLLBACK_COMPLETE)
 
 
 class AWSCloudFormation(AWSSession):
@@ -710,7 +712,7 @@ class AWSCloudFormation(AWSSession):
                                 )))
 
                                 if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
-                                   event['ResourceStatus'] in STATUS_NOT_IN_PROGRESS:
+                                   event['ResourceStatus'] in STATUS_CF_RUN_COMPLETE:
                                     print('Stopping events printing on status {}'.format(
                                         event['ResourceStatus']
                                     ))
