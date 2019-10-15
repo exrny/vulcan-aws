@@ -341,8 +341,8 @@ class AWSCloudFormation(AWSSession):
             resp = cloudformation.describe_stacks(
                 StackName=resp['StackId']
             )
-            stack_id = resp[0]['StackId']
-            timestamp = resp[0]['CreationTime']
+            stack_id = resp['Stacks'][0]['StackId']
+            timestamp = resp['Stacks'][0]['CreationTime']
         except botocore.exceptions.ParamValidationError as error:
             if str(error).startswith("Parameter validation failed:\nInvalid type for parameter"):
                 res = re.search((r'Invalid type for parameter Parameters\[(\d)\].ParameterValue, '
