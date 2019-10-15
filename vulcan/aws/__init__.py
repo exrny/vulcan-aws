@@ -10,6 +10,7 @@ from vulcan.aws.services._s3 import AWSS3
 from vulcan.aws.services._cloudfront import AWSCloudFront
 from vulcan.aws.services._ec2 import AWSEC2
 from vulcan.aws.services._logs import AWSLogs
+from vulcan.aws.services._acm import AWSACM
 from vulcan.aws._common import generatePassword
 from vulcan.aws._common import safe_cd
 
@@ -18,6 +19,6 @@ __path__ = pkgutil.extend_path(__path__, __name__)
 
 __all__ = [
     'AWSSession', 'AWSLambda', 'AWSCloudFormation', 'AWSIAM',
-    'AWSS3', 'AWSCloudFront', 'AWSEC2', 'AWSLogs',
+    'AWSS3', 'AWSCloudFront', 'AWSEC2', 'AWSLogs', 'AWSACM',
     'generatePassword', 'safe_cd'
 ]
