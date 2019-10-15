@@ -32,3 +32,4 @@ class AWSACM(AWSSession):
                             raise Exception('Multiple certificates ''with same domain name.')
                         else:
                             cert_arn = cert['CertificateArn']
+        return cert_arn
