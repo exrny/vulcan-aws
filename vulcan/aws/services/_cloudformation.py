@@ -328,7 +328,6 @@ class AWSCloudFormation(AWSSession):
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
         print("Creating stack {}".format(stack_name))
-        timestamp = datetime.now(timezone.utc)
         stack_id = None
         parameters = self._join_parameters(self.parameters, kwargs.get('parameters', None))
         try:
@@ -339,7 +338,11 @@ class AWSCloudFormation(AWSSession):
                 OnFailure=self.on_failure,
                 Parameters=parameters
             )
-            stack_id = resp['StackId']
+            resp = cloudformation.describe_stacks(
+                StackName=resp['StackId']
+            )
+            stack_id = resp[0]['StackId']
+            timestamp = resp[0]['CreationTime']
         except botocore.exceptions.ParamValidationError as error:
             if str(error).startswith("Parameter validation failed:\nInvalid type for parameter"):
                 res = re.search((r'Invalid type for parameter Parameters\[(\d)\].ParameterValue, '
@@ -665,7 +668,7 @@ class AWSCloudFormation(AWSSession):
 
     def _print_events(self, root_stack_id, root_stack_name, start_ts):
         cloudformation = self.client('cloudformation')
-
+        print("Printing events for {} and all it's child".format(root_stack_id))
         stack_ids = [root_stack_id]
         stack_data_template = {
             'event_ids_shown': set(),
