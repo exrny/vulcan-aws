@@ -1,6 +1,6 @@
 import boto3
 import uuid
-from navio.aws.services._session import AWSSession
+from vulcan.aws.services._session import AWSSession
 
 
 class AWSACM(AWSSession):
