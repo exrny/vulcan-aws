@@ -49,3 +49,9 @@ class TestAWSEC2:
 
     def test_import(self):
         from vulcan.aws import AWSEC2
+
+
+class TestAWSACM:
+
+    def test_import(self):
+        from vulcan.aws import AWSACM
