@@ -178,14 +178,14 @@ class AWSCloudFormation(AWSSession):
     def print_outputs(self, **kwargs):
         stack_outputs = self.outputs(**kwargs)
 
-        if len(outputs) == 0:
+        if len(stack_outputs) == 0:
             print("Stack {} don't have any outputs".format(self.stack_name))
         else:
             print("Stack {} outputs:".format(self.stack_name))
             max_name_len = 0
-            for output in outputs:
+            for output in stack_outputs:
                 max_name_len = max(max_name_len, len(output['OutputKey']))
-            for output in outputs:
+            for output in stack_outputs:
                 print(' '.join([
                     output['OutputKey'].ljust(max_name_len) + ':',
                     output['OutputValue'],
@@ -202,9 +202,11 @@ class AWSCloudFormation(AWSSession):
 
         no_fail = False
         no_cache = False
+        print_out = False
         if kwargs:
             no_fail = kwargs.get('no_fail', False)
             no_cache = kwargs.get('no_cache', False)
+            print_out = kwargs.get('print', False)
 
         stack_outputs = None
         nextToken = None
@@ -258,6 +260,16 @@ class AWSCloudFormation(AWSSession):
 
             return None
         else:
+            if print_out:
+                max_name_len = 0
+                for output in stack_outputs:
+                    max_name_len = max(max_name_len, len(output['OutputKey']))
+                for output in stack_outputs:
+                    print(' '.join([
+                        output['OutputKey'].ljust(max_name_len) + ':',
+                        output['OutputValue'],
+                    ]))
+
             return stack_outputs
 
     def output(self, output_key, **kwargs):
