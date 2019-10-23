@@ -677,9 +677,8 @@ class AWSCloudFormation(AWSSession):
 
         root_stack_running = True
         stacks_running = 0
+        last_out_msg = ''
         while(root_stack_running):
-            stack_ids.sort(reverse=True)
-
             for stack_id in stack_ids:
                 try:
                     resp_iterator = paginator.paginate(StackName=stack_id)
@@ -691,7 +690,7 @@ class AWSCloudFormation(AWSSession):
                                 if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
                                    phResId and \
                                    phResId not in stack_ids:
-                                    stack_ids.append(phResId)
+                                    stack_ids.insert(0, phResId)
                                     stack_data[phResId] = stack_data_template.copy()
                                     stack_data[phResId]['stack_name'] = event['LogicalResourceId']
 
@@ -703,14 +702,14 @@ class AWSCloudFormation(AWSSession):
                                    event['StackId'] == phResId:
                                     logical_resource_id = stack_data[stack_id]['stack_name']
 
-                                print(' / '.join((
+                                out_msg = ' / '.join((
                                     event['Timestamp'].strftime('%H:%m:%S'),
                                     self._trunc(stack_data[stack_id]['stack_name'], 16),
                                     self._trunc(logical_resource_id, 24),
                                     event['ResourceType'].replace('AWS::', '').ljust(37),
                                     event['ResourceStatus'].ljust(28),
                                     event.get('ResourceStatusReason', ''),
-                                )))
+                                ))
 
                                 if event['ResourceType'] == 'AWS::CloudFormation::Stack' and \
                                    event['ResourceStatus'] in STATUS_CF_RUN_COMPLETE and \
@@ -720,6 +719,10 @@ class AWSCloudFormation(AWSSession):
                                     ))
                                     root_stack_running = False
                                     stacks_running = stacks_running + 1
+                                    last_out_msg = out_msg
+                                else:
+                                    print(out_msg)
+
                 except botocore.exceptions.ClientError as err:
                     err_msg = err.response['Error']['Message']
                     err_code = err.response['Error']['Code']
@@ -729,3 +732,4 @@ class AWSCloudFormation(AWSSession):
                     else:
                         print('Msg: {}, Code: {}'.format(err_msg, err_code))
                         raise Exception(err)
+        print(last_out_msg)
