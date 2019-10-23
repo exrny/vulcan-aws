@@ -675,8 +675,11 @@ class AWSCloudFormation(AWSSession):
 
         paginator = cloudformation.get_paginator('describe_stack_events')
 
+        root_stack_running = True
         stacks_running = 0
-        while(stacks_running <= len(stack_ids)):
+        while(root_stack_running):
+            stack_ids.sort(reverse=True)
+
             for stack_id in stack_ids:
                 try:
                     resp_iterator = paginator.paginate(StackName=stack_id)
@@ -710,10 +713,12 @@ class AWSCloudFormation(AWSSession):
                                 )))
 
                                 if event['ResourceType'] == 'AWS::CloudFormation::Stack' and \
-                                   event['ResourceStatus'] in STATUS_CF_RUN_COMPLETE:
-                                    print('Stopping events printing on status {}'.format(
-                                        event['ResourceStatus']
+                                   event['ResourceStatus'] in STATUS_CF_RUN_COMPLETE and \
+                                   event['PhysicalResourceId'] == root_stack_id:
+                                    print('Stopping events printing on status {}. ({}, {})'.format(
+                                        event['ResourceStatus'], stacks_running, len(stack_ids)
                                     ))
+                                    root_stack_running = False
                                     stacks_running = stacks_running + 1
                 except botocore.exceptions.ClientError as err:
                     err_msg = err.response['Error']['Message']
