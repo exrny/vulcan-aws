@@ -261,14 +261,15 @@ class AWSCloudFormation(AWSSession):
             return None
         else:
             if print_out:
-                max_name_len = 0
-                for output in stack_outputs:
-                    max_name_len = max(max_name_len, len(output['OutputKey']))
-                for output in stack_outputs:
-                    print(' '.join([
-                        output['OutputKey'].ljust(max_name_len) + ':',
-                        output['OutputValue'],
-                    ]))
+                if len(stack_outputs) == 0:
+                    print("Stack {} don't have any outputs".format(self.stack_name))
+                else:
+                    print("Stack {} outputs:".format(self.stack_name))
+                    for output in stack_outputs:
+                        print('{key}: {value}'.format(
+                            key=output['OutputKey'],
+                            value=output['OutputValue'],
+                        ))
 
             return stack_outputs
 
@@ -386,16 +387,7 @@ class AWSCloudFormation(AWSSession):
 
         self._print_events(stack_id, stack_name, timestamp)
 
-        outputs = self.outputs(no_cache=True)
-        if len(outputs) == 0:
-            print("Stack {} don't have any outputs".format(self.stack_name))
-        else:
-            print("Stack {} outputs:".format(self.stack_name))
-            for output in outputs:
-                print('{key}: {value}'.format(
-                    key=output['OutputKey'],
-                    value=output['OutputValue'],
-                ))
+        self.outputs(no_cache=True, print=True)
 
         return
 
@@ -422,16 +414,7 @@ class AWSCloudFormation(AWSSession):
 
         self._print_events(resp['StackId'], stack_name, timestamp)
 
-        outputs = self.outputs(no_cache=True)
-        if len(outputs) == 0:
-            print("Stack {} don't have any outputs".format(self.stack_name))
-        else:
-            print("Stack {} outputs:".format(self.stack_name))
-            for output in outputs:
-                print('{key}: {value}'.format(
-                    key=output['OutputKey'],
-                    value=output['OutputValue'],
-                ))
+        self.outputs(no_cache=True, print=True)
 
         return
 
@@ -693,7 +676,7 @@ class AWSCloudFormation(AWSSession):
         paginator = cloudformation.get_paginator('describe_stack_events')
 
         stacks_running = 0
-        while(stacks_running < len(stack_ids)):
+        while(stacks_running <= len(stack_ids)):
             for stack_id in stack_ids:
                 try:
                     resp_iterator = paginator.paginate(StackName=stack_id)
@@ -726,7 +709,7 @@ class AWSCloudFormation(AWSSession):
                                     event.get('ResourceStatusReason', ''),
                                 )))
 
-                                if 'AWS::CloudFormation::Stack' == event['ResourceType'] and \
+                                if event['ResourceType'] == 'AWS::CloudFormation::Stack' and \
                                    event['ResourceStatus'] in STATUS_CF_RUN_COMPLETE:
                                     print('Stopping events printing on status {}'.format(
                                         event['ResourceStatus']
