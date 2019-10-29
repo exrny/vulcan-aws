@@ -1,7 +1,3 @@
-import boto3
-import botocore
-import os
-import uuid
 import json
 from vulcan.aws.services._session import AWSSession
 from vulcan.aws._common import json_serial
@@ -10,7 +6,10 @@ from vulcan.aws._common import json_serial
 class AWSEC2(AWSSession):
 
     def __init__(self, **kwargs):
-        super(self.__class__, self).__init__(kwargs['profile_name'])
+        super(
+            self.__class__,
+            self
+        ).__init__(kwargs['profile_name'], kwargs.get('region_name', None))
 
     def generate_ssh_config(self, **kwargs):
         filters = list()

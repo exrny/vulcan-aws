@@ -9,7 +9,7 @@ class AWSACM(AWSSession):
         super(
             self.__class__,
             self
-        ).__init__(kwargs['profile_name'])
+        ).__init__(kwargs['profile_name'], kwargs.get('region_name', None))
 
     def find_cert_arn(self, **kwargs):
         cert_arn = None
@@ -21,9 +21,7 @@ class AWSACM(AWSSession):
 
         paginator = client.get_paginator('list_certificates')
 
-        page_iterator = paginator.paginate(
-            CertificateStatuses=['ISSUED']
-        )
+        page_iterator = paginator.paginate(CertificateStatuses=['ISSUED'])
         for page in page_iterator:
             if 'CertificateSummaryList' in page:
                 for cert in page['CertificateSummaryList']:
@@ -32,4 +30,35 @@ class AWSACM(AWSSession):
                             raise Exception('Multiple certificates ''with same domain name.')
                         else:
                             cert_arn = cert['CertificateArn']
+
         return cert_arn
+
+    def request_via_dns(self, **kwargs):
+        if 'domain_name' not in kwargs:
+            raise Exception('Argument missing: domain_name')
+
+        if 'alternative_names' not in kwargs:
+            raise Exception('Argument missing: alternative_names')
+
+        client = self.client('acm')
+
+        resp = client.request_certificate(
+            DomainName=kwargs.get('domain_name'),
+            SubjectAlternativeNames=kwargs.get('alternative_names'),
+            ValidationMethod='DNS',
+            IdempotencyToken=uuid.uuid4()
+        )
+
+        return resp
+
+    def get_dns_validation_options(self, **kwargs):
+        if 'certificate_arn' not in kwargs:
+            raise Exception('Argument missing: certificate_arn')
+
+        client = self.client('acm')
+
+        resp = client.describe_certificate(
+            CertificateArn=certificate_arn
+        )
+
+        return resp['Certificate']['DomainValidationOptions'][0]['ResourceRecord']

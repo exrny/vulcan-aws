@@ -25,7 +25,7 @@ class AWSS3(AWSSession):
         super(
             self.__class__,
             self
-        ).__init__(kwargs['profile_name'])
+        ).__init__(kwargs['profile_name'], kwargs.get('region_name', None))
 
     def bucket_exists(self, **kwargs):
         if 'bucket_name' not in kwargs:
@@ -46,6 +46,27 @@ class AWSS3(AWSSession):
                     err_msg), sys.exc_info()[2])
 
         return True
+
+    def copy_file(self, **kwargs):
+        if 'bucket_name' not in kwargs:
+            raise Exception('Argument missing: bucket_name')
+
+        s3api = self.client('s3')
+
+        file = open(kwargs.get('file'), 'rb')
+        print('Uploading {file} to s3://{bucket}{key}'.format(
+            file=file,
+            bucket=kwargs.get('bucket_name'),
+            key=kwargs.get('key'))
+        )
+        s3api.put_object(
+            Bucket=kwargs.get('bucket_name'),
+            Key=kwargs.get('key'),
+            Body=file
+        )
+        file.close()
+
+        return
 
     def sync(self, **kwargs):
         if 'metadata' in kwargs:
@@ -231,8 +252,8 @@ class AWSS3(AWSSession):
         s3_bucket = url.netloc
         s3_key = url.path
 
-        # if s3_key.endswith('/'):
-        #     s3_key = "%s%s" % (s3_key, s3_url)
+        if s3_key.endswith('/'):
+            s3_key = "%s%s" % (s3_key, s3_url)
 
         if s3_key.startswith('/'):
             s3_key = s3_key[1:]

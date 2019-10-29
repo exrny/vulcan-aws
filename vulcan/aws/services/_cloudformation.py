@@ -334,18 +334,17 @@ class AWSCloudFormation(AWSSession):
 
         cloudformation = self.client('cloudformation')
 
-        stack_name = self.stack_name
         if 'stack_name' in kwargs:
-            stack_name = kwargs.get('stack_name')
+            self.stack_name = kwargs.get('stack_name')
 
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
-        print("Creating stack {}".format(stack_name))
+        print("Creating stack {}".format(self.stack_name))
         stack_id = None
         parameters = self._join_parameters(self.parameters, kwargs.get('parameters', None))
         try:
             resp = cloudformation.create_stack(
-                StackName=stack_name,
+                StackName=self.stack_name,
                 TemplateURL=template_url,
                 Capabilities=['CAPABILITY_NAMED_IAM'],
                 OnFailure=self.on_failure,
@@ -385,7 +384,7 @@ class AWSCloudFormation(AWSSession):
             else:
                 raise error
 
-        self._print_events(stack_id, stack_name, timestamp)
+        self._print_events(stack_id, timestamp)
 
         self.outputs(no_cache=True, print=True)
 
@@ -396,23 +395,22 @@ class AWSCloudFormation(AWSSession):
 
         cloudformation = self.client('cloudformation')
 
-        stack_name = self.stack_name
         if 'stack_name' in kwargs:
-            stack_name = kwargs.get('stack_name')
+            self.stack_name = kwargs.get('stack_name')
 
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
-        print("Updating stack {}".format(stack_name))
+        print("Updating stack {}".format(self.stack_name))
         timestamp = datetime.now(timezone.utc)
         resp = cloudformation.update_stack(
-            StackName=stack_name,
+            StackName=self.stack_name,
             TemplateURL=template_url,
             Capabilities=['CAPABILITY_NAMED_IAM'],
             Parameters=self._join_parameters(
                 self.parameters, kwargs.get('parameters', None))
         )
 
-        self._print_events(resp['StackId'], stack_name, timestamp)
+        self._print_events(resp['StackId'], timestamp)
 
         self.outputs(no_cache=True, print=True)
 
@@ -421,19 +419,18 @@ class AWSCloudFormation(AWSSession):
     def delete(self, **kwargs):
         cloudformation = self.client('cloudformation')
 
-        stack_name = self.stack_name
         if 'stack_name' in kwargs:
-            stack_name = kwargs.get('stack_name')
+            self.stack_name = kwargs.get('stack_name')
 
-        resp = cloudformation.describe_stacks(StackName=stack_name)
+        resp = cloudformation.describe_stacks(StackName=self.stack_name)
 
-        print('Deleting stack {}'.format(stack_name))
+        print('Deleting stack {}'.format(self.stack_name))
         timestamp = datetime.now(timezone.utc)
         cloudformation.delete_stack(
             StackName=resp['Stacks'][0]['StackId']
         )
 
-        self._print_events(resp['Stacks'][0]['StackId'], stack_name, timestamp)
+        self._print_events(resp['Stacks'][0]['StackId'], timestamp)
 
         cache_key = 'cloudformation.outputs.{}.{}.{}'.format(
             self.region_name,
@@ -661,13 +658,13 @@ class AWSCloudFormation(AWSSession):
         else:
             return text.ljust(length)
 
-    def _print_events(self, root_stack_id, root_stack_name, start_ts):
+    def _print_events(self, root_stack_id, start_ts):
         cloudformation = self.client('cloudformation')
         print("Printing events for {} and all it's child".format(root_stack_id))
         stack_ids = [root_stack_id]
         stack_data_template = {
             'event_ids_shown': set(),
-            'stack_name': root_stack_name
+            'stack_name': self.stack_name
         }
         stack_data = {
             root_stack_id: stack_data_template.copy()
