@@ -401,16 +401,47 @@ class AWSCloudFormation(AWSSession):
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
         print("Updating stack {}".format(self.stack_name))
-        timestamp = datetime.now(timezone.utc)
-        resp = cloudformation.update_stack(
-            StackName=self.stack_name,
-            TemplateURL=template_url,
-            Capabilities=['CAPABILITY_NAMED_IAM'],
-            Parameters=self._join_parameters(
-                self.parameters, kwargs.get('parameters', None))
-        )
+        stack_id = None
+        parameters = self._join_parameters(self.parameters, kwargs.get('parameters', None))
+        try:
+            resp = cloudformation.update_stack(
+                StackName=self.stack_name,
+                TemplateURL=template_url,
+                Capabilities=['CAPABILITY_NAMED_IAM'],
+                Parameters=parameters
+            )
+            stack_id = resp['StackId']
+            timestamp = datetime.now(timezone.utc)
+        except botocore.exceptions.ParamValidationError as error:
+            if str(error).startswith("Parameter validation failed:\nInvalid type for parameter"):
+                res = re.search((r'Invalid type for parameter Parameters\[(\d)\].ParameterValue, '
+                                r'value: None, type: (.+), valid types: (.+)'), str(error))
+                param_idx = int(res.group(1))
+                param_type_asis = res.group(2)
+                param_type_tobe = res.group(3)
 
-        self._print_events(resp['StackId'], timestamp)
+                print('Validation error:')
+                print('Parameter {param_name} has invalid type/value.'.format(
+                    param_name=parameters[param_idx]['ParameterKey']
+                ))
+                print('Expected: {expected}, Actual: {actual}/{value}'.format(
+                    expected=param_type_tobe,
+                    actual=param_type_asis,
+                    value=parameters[param_idx]['ParameterValue']
+                ))
+                sys.exit(1)
+            else:
+                raise error
+        except botocore.exceptions.ClientError as error:
+            err_msg = error.response['Error']['Message']
+            err_code = error.response['Error']['Code']
+            if err_code == 'ValidationError':
+                print('Validation error: {}'.format(err_msg))
+                sys.exit(1)
+            else:
+                raise error
+
+        self._print_events(stack_id, timestamp)
 
         self.outputs(no_cache=True, print=True)
 
@@ -628,27 +659,27 @@ class AWSCloudFormation(AWSSession):
            (params2 and type(params2) != list):
             raise Exception("Parameters argument should be a list() or None")
 
+        result_d = dict()
         if not params1 and params2:
-            return params2
+            for param in params2:
+                result_d[param['ParameterKey']] = param['ParameterValue']
         elif params1 and not params2:
-            return params1
+            for param in params1:
+                result_d[param['ParameterKey']] = param['ParameterValue']
         elif params1 and params2:
-            result_d = dict()
             for param in params1:
                 result_d[param['ParameterKey']] = param['ParameterValue']
             for param in params2:
                 result_d[param['ParameterKey']] = param['ParameterValue']
 
-            result = list()
-            for key in result_d:
-                if result_d[key] is not None:
-                    result.append({
-                        'ParameterKey': key,
-                        'ParameterValue': result_d[key]
-                    })
-            return result
-        else:
-            return list()
+        result = list()
+        for key in result_d:
+            if result_d[key] is not None:
+                result.append({
+                    'ParameterKey': key,
+                    'ParameterValue': result_d[key]
+                })
+        return result
 
     def _trunc(self, text, length):
         if len(text) > length:
