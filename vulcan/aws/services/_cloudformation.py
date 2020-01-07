@@ -58,7 +58,7 @@ class AWSCloudFormation(AWSSession):
         else:
             self.easy_service = False
 
-            self.on_failure = kwargs.get('on_failure', 'ROLLBACK')
+            self.on_failure = kwargs.get('on_failure', 'DELETE')
 
             if 'template' in kwargs and type(kwargs['template']) == str:
                 self.template = kwargs['template']
@@ -641,10 +641,11 @@ class AWSCloudFormation(AWSSession):
 
             result = list()
             for key in result_d:
-                result.append({
-                    'ParameterKey': key,
-                    'ParameterValue': result_d[key]
-                })
+                if result_d[key] not None:
+                    result.append({
+                        'ParameterKey': key,
+                        'ParameterValue': result_d[key]
+                    })
             return result
         else:
             return list()
