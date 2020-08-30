@@ -526,6 +526,10 @@ class AWSCloudFormation(AWSSession):
         if 'stack_name' in kwargs:
             stack_name = kwargs.get('stack_name')
 
+        change_set_type = 'UPDATE'
+        if kwargs.get('new_stack', False):
+            change_set_type = 'CREATE'
+
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
 
@@ -537,7 +541,7 @@ class AWSCloudFormation(AWSSession):
             StackName=stack_name,
             ChangeSetName=change_set_name,
             ClientToken=client_token,
-            ChangeSetType='UPDATE',
+            ChangeSetType=change_set_type,
             TemplateURL=template_url,
             Capabilities=['CAPABILITY_NAMED_IAM'],
             Parameters=self._join_parameters(
