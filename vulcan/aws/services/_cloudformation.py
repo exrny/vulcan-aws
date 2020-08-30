@@ -529,7 +529,7 @@ class AWSCloudFormation(AWSSession):
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
 
-        change_set_name = 'cs-{ts}'.format(ts=time.strftime('%Y-%m-%d_%H-%M-%S'))
+        change_set_name = 'cs-{ts}'.format(ts=time.strftime('%Y-%m-%d-%H-%M-%S'))
         client_token = 'token{uuid}'.format(uuid=uuid.uuid4())
 
         print("Running dry_run for stack {}".format(stack_name))
