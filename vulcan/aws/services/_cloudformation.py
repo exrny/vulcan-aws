@@ -529,7 +529,7 @@ class AWSCloudFormation(AWSSession):
         template_url = "https://s3.amazonaws.com/%s/%s" % (
             self.s3_bucket, self.s3_key)
 
-        change_set_name = 'cs{ts}'.format(ts=time.strftime('%Y%m%d%H%M%S'))
+        change_set_name = 'cs-{ts}'.format(ts=time.strftime('%Y-%m-%d_%H-%M-%S'))
         client_token = 'token{uuid}'.format(uuid=uuid.uuid4())
 
         print("Running dry_run for stack {}".format(stack_name))
@@ -595,11 +595,12 @@ class AWSCloudFormation(AWSSession):
             else:
                 raise Exception("Unknown error", None, sys.exc_info()[2])
         finally:
-            print('Deleting change set')
-            cloudformation.delete_change_set(
-                StackName=stack_name,
-                ChangeSetName=change_set['Id']
-            )
+            if kwargs.get('delete_on_finish', True):
+                print('Deleting change set')
+                cloudformation.delete_change_set(
+                    StackName=stack_name,
+                    ChangeSetName=change_set['Id']
+                )
 
         return
 
